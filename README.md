@@ -41,3 +41,20 @@ The project is created for reading medieval latin documents using deep learning 
 and unpack it to project root folder
 
 [Link](https://drive.google.com/drive/folders/1rDiNWzTFDnUGerJdcM-tIONm1AEr_n0h?usp=sharing) for raw data.
+
+## How to run
+
+To __inference__ a model use:
+```bash
+py main.py inference --image <path/to/image>
+```
+
+To __train__ a model use:
+```bash
+py main.py train -e 300 --data-file <path/to/data/file.yaml>
+```
+
+To __check dataset__ run:
+```bash
+py main.py dataset_checker
+```

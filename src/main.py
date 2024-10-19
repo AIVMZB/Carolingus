@@ -4,6 +4,7 @@ from detection import dataset_checker, inference, train
 
 def build_parser() -> ArgumentParser:
     parser = ArgumentParser(
+        usage="py main.py <module> [args for specified module].\nExample: py main.py inference --image path/to/image",
         parents=[
             dataset_checker.build_parser(),
             inference.build_parser(),
@@ -13,7 +14,8 @@ def build_parser() -> ArgumentParser:
     )
 
     parser.add_argument(
-        "-m", "--module", type=str, 
+        "module", 
+        type=str,
         help="Module name to run"    
     )
 
@@ -28,7 +30,7 @@ def main():
         inference.run(args)
     elif args.module == "dataset_checker":
         dataset_checker.run(args)
-    elif args.modulde == "train":
+    elif args.module == "train":
         train.run(args)
     else:
         raise ArgumentError(f"No such available module {args.module}")
