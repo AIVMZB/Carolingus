@@ -1,0 +1,10 @@
+SEED: 42
+MARGIN: 0.5
+EMBED_DIM: 64
+STEPS_PER_EPOCH: 600
+IMG_SIZE: 120
+BATCH_SIZE: 12
+DATASET_PATH: "datasets/word_dataset"
+SAVE_PATH: "runs/syntax_embedding"
+LR: 0.0008
+EPOCHS: 100
