@@ -32,11 +32,11 @@ class SyntaxLoss(nn.Module):
             margin (float): margin distance between encodings
 
         Returns:
-            (torch.Tensor): Tensor of shape (N,)
+            (torch.Tensor): Tensor of shape (1,)
         """
-        norm = torch.linalg.vector_norm(first_prediction - secord_prediction, dim=1, ord=2)
-        squared_norm = torch.pow(norm, 2)
-        left_part = F.relu(self._margin * string_distance - squared_norm)
-        right_part = F.relu(squared_norm - self._margin * (string_distance + 1))
+        # squared_norm = torch.linalg.vector_norm(first_prediction - secord_prediction, dim=1, ord=2) ** 2
+        norm = F.pairwise_distance(first_prediction, secord_prediction)
+        left_part = F.relu(self._margin * string_distance - norm)
+        right_part = F.relu(norm - self._margin * (string_distance + 1))
 
         return torch.mean(left_part + right_part)
