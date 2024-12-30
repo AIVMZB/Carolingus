@@ -7,6 +7,6 @@ IMG_FORMAT: RGB
 BATCH_SIZE: 8
 DATASET_PATH: "datasets/word_dataset"
 SAVE_PATH: "runs/syntax_embedding"
-PRETRAINED: # "runs/syntax_embedding/2024-12-29 13_45_12/model.pth"
-LR: 0.0001
-EPOCHS: 60
+PRETRAINED: "runs/syntax_embedding/2024-12-29 22_06_57/model.pth"
+LR: 0.0003
+EPOCHS: 100

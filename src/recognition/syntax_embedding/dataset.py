@@ -58,7 +58,7 @@ class SyntaxEmbeddingTripletDataset(Dataset):
             ToDtype(torch.float32),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
-    
+
     def read_image(self, relative_image_path: str) -> torch.Tensor:
         image_path = os.path.join(self._dataset_root, relative_image_path)
         np_image = cv2.imread(image_path)
@@ -67,7 +67,7 @@ class SyntaxEmbeddingTripletDataset(Dataset):
         elif self._image_format == "GRAY":
             np_image = cv2.cvtColor(np_image, cv2.COLOR_BGR2GRAY)
             np_image = np.expand_dims(np_image, 2)
-        
+
         image = torch.from_numpy(np_image.transpose(2, 0, 1))
         image = self._augmentation(image).to(self._device)
 
@@ -75,12 +75,13 @@ class SyntaxEmbeddingTripletDataset(Dataset):
 
     def __getitem__(self, index) -> tuple[str, np.ndarray]:
         row = self._positive_pairs_df.iloc[index]
+        anchor = row["anchor"]
         positives = row["positive"].split(":")
         positive = random.choice(positives)
-        negatives = self._images - set(positives)
+        negatives = self._images - set(positives) - set([anchor])
         negative = random.choice(list(negatives))
 
-        anchor_image = self.read_image(row["anchor"])
+        anchor_image = self.read_image(anchor)
         positive_image = self.read_image(positive)
         negative_image = self.read_image(negative)
 
@@ -108,11 +109,13 @@ class ImgToWordDataset(Dataset):
         self,
         dataset_root: str,
         image_format: Literal["RGB", "BGR"] = "RGB",
+        img_size: int = 120,
         images: list | None = None
     ):
         super().__init__()
         self._image_format = image_format
         self._dataset_root = dataset_root
+        self._img_size = (img_size, img_size)
         if images is None:
             self._image_paths: list = []
             for document in os.listdir(dataset_root):
@@ -125,7 +128,7 @@ class ImgToWordDataset(Dataset):
 
         self.transform = Compose([
             ToDtype(torch.float32),
-            Resize((120, 120)),
+            Resize(self._img_size),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
@@ -150,7 +153,8 @@ class ImgToWordDataset(Dataset):
 
         return {
             "word": word,
-            "image": image
+            "image": image,
+            "image_path": image_path
         }
 
 

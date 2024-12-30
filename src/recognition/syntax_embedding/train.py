@@ -1,24 +1,18 @@
 import os
-import yaml
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.nn import functional as F
 from tqdm import tqdm
-from datetime import datetime
 from torch.optim import Adam
-from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import random
 import json
 
 from .dataset import SyntaxEmbeddingTripletDataset, ImgToWordDataset
 from .model import SyntaxEncoder
-from .syntax_loss import SyntaxLoss
-from .metrics import find_closest_words, find_gt_closest_words, measure
+from .metrics import string_distance
 
 
 @dataclass
@@ -59,6 +53,7 @@ def train(
     margin: float = 0.5,
     epochs: int = 50
 ) -> TrainResult:
+    # TODO: Make online hard training https://omoindrot.github.io/triplet-loss#offline-and-online-triplet-mining
     if model is None:
         model = SyntaxEncoder(embed_dim)
     model = model.cuda()
@@ -115,146 +110,50 @@ def train(
     )
 
 
-def get_train_val_images(
-    dataset_root: str, 
-    val_size: float = 0.2,
-    seed: int = 42
-) -> tuple[list, list]:
-    total_images = []
-    for document in os.listdir(dataset_root):
-        if "." in document:
-            continue
-        
-        for image in os.listdir(os.path.join(dataset_root, document)):
-            total_images.append(
-                os.path.join(dataset_root, document, image)
-            )
-
-    train_images, val_images = train_test_split(
-        total_images, test_size=val_size, random_state=seed
-    )
-    return train_images, val_images
-
-
-def save_train_results(train_results: TrainResult, save_dir: str, config: dict):
-    os.makedirs(save_dir, exist_ok=True)
-
-    torch.save(train_results.trained_model.state_dict(), os.path.join(save_dir, "model.pth"))
+def save_train_results(train_results: TrainResult, save_dir: str, tag: str = ""):
+    torch.save(train_results.trained_model.state_dict(), os.path.join(save_dir, f"{tag}model.pth"))
 
     plt.title("Loss plot")
     plt.plot(train_results.metrics["train_loss"][1:], label="Train loss")
     plt.plot(train_results.metrics["val_loss"][1:], label="Validation loss")
     plt.grid()
     plt.legend()
-    plt.savefig(os.path.join(save_dir, "losses.png"))
-
-    with open(os.path.join(save_dir, "config.yaml"), "w") as f:
-        yaml.dump(config, f, yaml.SafeDumper)
+    plt.savefig(os.path.join(save_dir, f"{tag}losses.png"))
 
 
-def make_embedding_file(model: SyntaxEncoder, save_dir: str, dataset: ImgToWordDataset):
-    embeddings: dict[str, list] = {}
+def make_embedding_files(model: SyntaxEncoder, save_dir: str, dataset: ImgToWordDataset):
+    embeddings_per_word: dict[str, list] = {}
+    embeddings_per_image: dict[str, list] = {}
     model.eval()
     print("Making embeddings...")
     with torch.no_grad():
         for i in tqdm(range(len(dataset) - 1)):
             data = dataset[i]
-            word, image = data["word"], data["image"]
+            word, image, image_path = data["word"], data["image"], data["image_path"]
             vec = model(image)[0]
-            if word in embeddings:
-                embeddings[word].append(vec.cpu().numpy())
+            if word in embeddings_per_word:
+                embeddings_per_word[word].append(vec.cpu().numpy())
             else:
-                embeddings[word] = [vec.cpu().numpy()]
+                embeddings_per_word[word] = [vec.cpu().numpy()]
+
+            embeddings_per_image[image_path] = vec.cpu().numpy().tolist()
+
+    json.dump(
+        embeddings_per_image, 
+        open(os.path.join(save_dir, "embeddings_per_image.json"), "w"), 
+        indent=2
+    )
 
     print("Calculating averages...")
-    for word, vecs in embeddings.items():
+    for word, vecs in embeddings_per_word.items():
         if len(vecs) > 1:
             vecs = np.array(vecs).mean(axis=0).tolist()
         elif len(vecs) == 1:
             vecs = vecs[0].tolist()
 
-        embeddings[word] = vecs
+        embeddings_per_word[word] = vecs
 
-    json.dump(embeddings, open(os.path.join(save_dir, "embeddings.json"), "w"), indent=2)
+    json.dump(embeddings_per_word, open(os.path.join(save_dir, "embeddings.json"), "w"), indent=2)
 
-    return embeddings
+    return embeddings_per_word
 
-
-def training_pipeline(config: str | dict):
-    if isinstance(config, str):
-        config = yaml.load(open(config), yaml.SafeLoader)
-
-    if config["PRETRAINED"] is not None:
-        model = SyntaxEncoder(output_dim=config["EMBED_DIM"])
-        model.load_state_dict(torch.load(config["PRETRAINED"], weights_only=True))
-    else: 
-        model = None
-
-    train_df = pd.read_csv(os.path.join(config["DATASET_PATH"], "train.csv"))
-    val_df = pd.read_csv(os.path.join(config["DATASET_PATH"], "val.csv"))
-    test_df = pd.read_csv(os.path.join(config["DATASET_PATH"], "test.csv"))
-    
-    train_dataset = SyntaxEmbeddingTripletDataset(
-        config["DATASET_PATH"],
-        train_df,
-        (config["IMG_SIZE"], config["IMG_SIZE"]),
-        config["IMG_FORMAT"]
-    )
-    val_dataset = SyntaxEmbeddingTripletDataset(
-        config["DATASET_PATH"],
-        val_df,
-        (config["IMG_SIZE"], config["IMG_SIZE"]),
-        config["IMG_FORMAT"]
-    )
-
-    save_dir = os.path.join(config["SAVE_PATH"], datetime.now().strftime("%Y-%m-%d %H_%M_%S"))
-    result = train(
-        train_dataset,
-        val_dataset,
-        config["STEPS_PER_EPOCH"],
-        config["BATCH_SIZE"],
-        model,
-        config["EMBED_DIM"],
-        config["LR"],
-        config["MARGIN"],
-        config["EPOCHS"]
-    )
-    save_train_results(result, save_dir, config)
-
-    train_img2word_dataset = ImgToWordDataset(
-        config["DATASET_PATH"],
-        config["IMG_FORMAT"],
-        train_df["anchor"].tolist()
-    )
-    val_img2word_dataset = ImgToWordDataset(
-        config["DATASET_PATH"],
-        config["IMG_FORMAT"],
-        val_df["anchor"].tolist()
-    )
-    test_img2word_dataset = ImgToWordDataset(
-        config["DATASET_PATH"],
-        config["IMG_FORMAT"],
-        test_df["anchor"].tolist()
-    )
-    embeddings = make_embedding_file(result.trained_model, save_dir, train_img2word_dataset)
-
-    print("Validating...")
-    nearest_precision = measure(result.trained_model, embeddings, val_img2word_dataset)
-    print(f"The metric value is {nearest_precision}")
-
-    result.trained_model.eval()
-    print("Testing...")
-    with torch.no_grad():
-        for _ in range(10):
-            val_data = test_img2word_dataset[np.random.randint(0, len(test_img2word_dataset))]
-            val_word = val_data["word"]
-            val_image = val_data["image"]
-
-            vec = result.trained_model(val_image)[0]
-            closest_words = find_closest_words(vec, embeddings, margin=2, max_words=5)
-            gt_closest_words = find_gt_closest_words(val_word, list(embeddings.keys()), threshold=2, sort=True)
-            print(f"The closes words to \"{val_word}\" are \n{closest_words}")
-            print(f"Ground truth closest words are\n{gt_closest_words}")
-            print("-------------------------------------")
-
-# TODO: find hard pairs and train on them
