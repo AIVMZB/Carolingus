@@ -22,25 +22,6 @@ class FCResBlock(nn.Module):
 class SyntaxEncoder(nn.Module):
     def __init__(self, output_dim: int):
         super(SyntaxEncoder, self).__init__()
-        self.cnn = nn.Sequential(
-            nn.Conv2d(3, 32, 5),
-            nn.ReLU(),
-            nn.Conv2d(32, 32, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            
-            nn.Conv2d(32, 64, 3),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(64, 128, 3),
-            nn.ReLU(),
-            nn.Conv2d(128, 128, 3),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
 
         resnet = resnet50(pretrained=True)
         self.cnn = nn.Sequential(*list(resnet.children())[:-1])
