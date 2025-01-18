@@ -51,7 +51,6 @@ def train(
     margin: float = 0.5,
     epochs: int = 50,
 ) -> TrainResult:
-    # TODO: Make online hard training https://omoindrot.github.io/triplet-loss#offline-and-online-triplet-mining
     if model is None:
         model = SyntaxEncoder(embed_dim)
     model = model.cuda()
@@ -115,7 +114,7 @@ def save_train_results(train_results: TrainResult, save_dir: str, tag: str = "")
         os.path.join(save_dir, f"{tag}model.pth"),
     )
 
-    plt.draw()
+    plt.clf()
     plt.title("Loss plot")
     plt.plot(train_results.metrics["train_loss"][1:], label="Train loss")
     plt.plot(train_results.metrics["val_loss"][1:], label="Validation loss")
