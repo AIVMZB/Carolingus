@@ -1,7 +1,7 @@
 from .common import string_distance, get_word_from_image_name, IndexedEmbeddings
 
-import torch
 from tqdm import tqdm
+import torch
 
 
 def nearest_precision(nearest_words: list[str], gt_nearest_words: list[str]):

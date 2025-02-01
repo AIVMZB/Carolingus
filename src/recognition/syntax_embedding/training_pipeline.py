@@ -1,4 +1,5 @@
 from datetime import datetime
+from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import json
@@ -76,7 +77,7 @@ def read_img2word_dataset(
     datasets = []
     for subset in subsets:
         if balanced:
-            df = pd.read_csv(os.path.join(dataset_path, f"{subset}-balanced.csv"))
+            df = pd.read_csv(os.path.join(dataset_path, f"{subset}-reduced-balanced.csv"))
         else:
             df = pd.read_csv(os.path.join(dataset_path, f"{subset}.csv"))
 
@@ -132,11 +133,10 @@ def test(
 
     model.eval()
     with torch.no_grad():
-        for _ in range(n_samples):
-            test_data = dataset[np.random.randint(0, len(dataset))]
+        for test_data in tqdm(dataset):
             test_word = test_data["word"]
             test_image = test_data["image"]
-
+            
             vec = model(test_image)[0]
             closest_words = indexed_embeddings.find_closest_words(
                 vec, margin=margin, max_words=max_words
@@ -156,7 +156,7 @@ def test(
                 print(gt_message, file=f)
                 print("-" * 60, file=f)
 
-                if verbose:
+                if verbose and np.random.randint(1, 4) == 1:
                     print(pred_message)
                     print(gt_message)
                     print("-" * 60)
@@ -173,13 +173,22 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
 
     save_train_results(train_results, save_dir)
 
-    train_img2word_dataset, val_img2word_dataset, test_img2word_dataset = (
+    train_img2word_dataset = read_img2word_dataset(
+        config["DATASET_PATH"],
+        config["IMG_SIZE"],
+        config["IMG_FORMAT"],
+        add_batch_dim=True,
+        subsets=["train"],
+        balanced=False,
+    )
+
+    val_img2word_dataset, test_img2word_dataset = (
         read_img2word_dataset(
             config["DATASET_PATH"],
             config["IMG_SIZE"],
             config["IMG_FORMAT"],
             add_batch_dim=True,
-            subsets=["train", "val", "test"],
+            subsets=["val", "test"],
             balanced=False,
         )
     )
@@ -198,7 +207,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         indexed_train_embeddings,
         config["MARGIN_THRESHOLD"],
         threshold=2,
-        max_words=3,
+        max_words=6
     )
 
     print(f"The metric value is {nearest_precision}")
@@ -213,9 +222,21 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         indexed_train_embeddings,
         os.path.join(save_dir, "test_results.txt"),
         config["MARGIN_THRESHOLD"],
-        max_words=3,
+        max_words=6,
         str_dist_thresh=2,
         n_samples=20,
+        verbose=False
+    )
+    test(
+        train_results.trained_model,
+        val_img2word_dataset,
+        indexed_train_embeddings,
+        os.path.join(save_dir, "val_results.txt"),
+        config["MARGIN_THRESHOLD"],
+        max_words=6,
+        str_dist_thresh=2,
+        n_samples=20,
+        verbose=False
     )
 
 
@@ -301,13 +322,6 @@ def hard_training_pipeline(
         config["IMG_FORMAT"],
         balanced=config["HARD_TRAIN"]["BALANCED"],
     )
-    # val_dataset = read_triplet_dataset(
-    #     config["DATASET_PATH"],
-    #     config["IMG_SIZE"],
-    #     config["IMG_FORMAT"],
-    #     subsets=["val"],
-    #     balanced=config["HARD_TRAIN"]["BALANCED"],
-    # )
     val_dataset = read_hard_triplet_dataset(
         config["DATASET_PATH"],
         val_embeddings,
