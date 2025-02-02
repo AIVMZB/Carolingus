@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from detection.model_wrapper import YoloWrapper
+from detection.models import YoloWrapper
 
 
 def parse_args():
