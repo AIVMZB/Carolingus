@@ -200,6 +200,8 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         train_results.trained_model, save_dir, val_img2word_dataset, subset="val"
     )
 
+    max_words = 10
+
     print("Validating...")
     indexed_train_embeddings = IndexedEmbeddings(train_embeddings)
     nearest_precision = measure(
@@ -207,7 +209,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         indexed_train_embeddings,
         config["MARGIN_THRESHOLD"],
         threshold=2,
-        max_words=6
+        max_words=max_words
     )
 
     print(f"The metric value is {nearest_precision}")
@@ -222,7 +224,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         indexed_train_embeddings,
         os.path.join(save_dir, "test_results.txt"),
         config["MARGIN_THRESHOLD"],
-        max_words=6,
+        max_words=max_words,
         str_dist_thresh=2,
         n_samples=20,
         verbose=False
@@ -233,7 +235,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         indexed_train_embeddings,
         os.path.join(save_dir, "val_results.txt"),
         config["MARGIN_THRESHOLD"],
-        max_words=6,
+        max_words=max_words,
         str_dist_thresh=2,
         n_samples=20,
         verbose=False
@@ -373,3 +375,5 @@ def main_pipeline(config: str | dict):
         model = training_pipeline(config, save_dir_of_repeat, model)
         for j in range(config["HARD_TRAIN"]["REPEAT"]):
             model = hard_training_pipeline(config, model, save_dir_of_repeat, repeat=j + 1)
+
+    print(f"Results are saved to {save_dir}")
