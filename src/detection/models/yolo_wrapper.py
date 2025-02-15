@@ -10,10 +10,13 @@ import os
 
 class YoloWrapper:
     TRAIN_KWARGS = dict(
-        batch=2,
-        box=10,
-        cls=0.2,
-        dfl=0.7,
+        batch=4,
+        box=9,
+        cls=1.5,
+        dfl=1.3,
+        optimizer="Adam",
+        rect=True,
+        single_cls=True,
         workers=1,
         hsv_h=0.0,
         hsv_s=0.0,
@@ -24,6 +27,8 @@ class YoloWrapper:
         mosaic=0.0,
         erasing=0.0,
         crop_fraction=0.1,
+        lr0=0.002,
+        lrf=0.001,
     )
 
     def __init__(
