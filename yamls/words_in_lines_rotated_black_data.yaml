@@ -1,4 +1,4 @@
-path: word-in-lines-rotated-black
+path: words-in-lines-rotated-black
 
 train: .\train
 val: .\validation

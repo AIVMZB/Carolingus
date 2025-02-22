@@ -91,6 +91,8 @@ def build_resolver_by_name(resolver_name: str | None) -> IntersectionResolver | 
         from detection.intersect_resolver import UnionResolver
 
         return UnionResolver()
+    if resolver_name is None:
+        return None
     else:
         raise ValueError(
             "Choose one the available resolvers: ByConfResolver, MeanResolver, UnionResolver"
