@@ -67,31 +67,54 @@ def yolo_result_to_obb(yolo_result: torch.Tensor) -> Obb:
     yolo_result = yolo_result.to("cpu").numpy()
 
     if len(yolo_result.shape) == 2:
-        return Obb(yolo_result[0, 0], yolo_result[0, 1], yolo_result[1, 0], yolo_result[1, 1], 
-                   yolo_result[2, 0], yolo_result[2, 1], yolo_result[3, 0], yolo_result[3, 1])
+        return Obb(
+            yolo_result[0, 0],
+            yolo_result[0, 1],
+            yolo_result[1, 0],
+            yolo_result[1, 1],
+            yolo_result[2, 0],
+            yolo_result[2, 1],
+            yolo_result[3, 0],
+            yolo_result[3, 1],
+        )
     elif len(yolo_result.shape) == 1:
-        return Obb(yolo_result[0], yolo_result[1], 
-                   yolo_result[2], yolo_result[1], 
-                   yolo_result[2], yolo_result[3], 
-                   yolo_result[0], yolo_result[3])
+        return Obb(
+            yolo_result[0],
+            yolo_result[1],
+            yolo_result[2],
+            yolo_result[1],
+            yolo_result[2],
+            yolo_result[3],
+            yolo_result[0],
+            yolo_result[3],
+        )
 
 
 def yolo_result_to_bbox(yolo_result: torch.Tensor, input_format: BoxFormat) -> Obb:
     yolo_result = yolo_result.to("cpu").numpy()
     if input_format == BoxFormat.xyxy:
-        yolo_result = [(yolo_result[0] + yolo_result[2]) / 2, 
-                       (yolo_result[1] + yolo_result[3]) / 2, 
-                       yolo_result[2] - yolo_result[0], 
-                       yolo_result[3] - yolo_result[1]]
+        yolo_result = [
+            (yolo_result[0] + yolo_result[2]) / 2,
+            (yolo_result[1] + yolo_result[3]) / 2,
+            yolo_result[2] - yolo_result[0],
+            yolo_result[3] - yolo_result[1],
+        ]
     elif input_format == BoxFormat.xywh:
-        yolo_result = [yolo_result[0] + yolo_result[2] / 2,
-                       yolo_result[1] + yolo_result[3] / 2,
-                       yolo_result[2], yolo_result[3]]
+        yolo_result = [
+            yolo_result[0] + yolo_result[2] / 2,
+            yolo_result[1] + yolo_result[3] / 2,
+            yolo_result[2],
+            yolo_result[3],
+        ]
 
     return Bbox(*yolo_result)
 
 
-def read_shapes(filename: str, transform_func: Callable[[List[float]], Union[Bbox, Obb]], class_nums: Union[str, List[str], Set[str]]) -> Union[List[Bbox], List[Obb]]:
+def read_shapes(
+    filename: str,
+    transform_func: Callable[[List[float]], Union[Bbox, Obb]],
+    class_nums: Union[str, List[str], Set[str]],
+) -> Union[List[Bbox], List[Obb]]:
     """
     Reads shapes from a file and transforms them using a given function.
 
@@ -107,17 +130,15 @@ def read_shapes(filename: str, transform_func: Callable[[List[float]], Union[Bbo
         class_nums = {class_nums}
     elif isinstance(class_nums, list):
         class_nums = set(class_nums)
-    
+
     shapes = []
-    with open(filename, 'r') as file:
+    with open(filename, "r") as file:
         for line in file:
             values = line.split()
             if values[0] not in class_nums:
                 continue
-            shapes.append(
-                transform_func(list(map(float, values[1:])))
-            )
-    
+            shapes.append(transform_func(list(map(float, values[1:]))))
+
     return shapes
 
 
@@ -161,10 +182,11 @@ def IoU(shape_1: Obb, shape_2: Obb) -> float:
 def obb_to_image_coords(width: int, height: int, obb: Obb) -> Obb:
     image_obb = []
     for i in range(len(obb)):
+        value = np.clip(obb[i], 0, 1)
         if i % 2 == 0:
-            image_obb.append(int(obb[i] * width))
+            image_obb.append(int(value * width))
         else:
-            image_obb.append(int(obb[i] * height))
+            image_obb.append(int(value * height))
 
     return to_obb(image_obb)
 
@@ -193,7 +215,10 @@ def sort_lines_vertically(lines: list[Obb]) -> List[int]:
     Returns:
         List[int]: The sorted list of line indices.
     """
-    sorted_indices = sorted(range(len(lines)), key=lambda i: min(lines[i].y1, lines[i].y2, lines[i].y3, lines[i].y4))
+    sorted_indices = sorted(
+        range(len(lines)),
+        key=lambda i: min(lines[i].y1, lines[i].y2, lines[i].y3, lines[i].y4),
+    )
 
     return sorted_indices
 
@@ -214,10 +239,14 @@ def sort_words_within_lines(word_indices: List[int], words: List[Bbox]) -> List[
     return sorted_indices
 
 
-def find_words_in_line(line_obb: Obb, word_bboxes: list[Bbox], 
-                       width: int, height: int, 
-                       used_words: set,
-                       thresh: float = 0.5) -> list:
+def find_words_in_line(
+    line_obb: Obb,
+    word_bboxes: list[Bbox],
+    width: int,
+    height: int,
+    used_words: set,
+    thresh: float = 0.5,
+) -> list:
     """
     Finds the indexes of words that intersect with a given line.
 
@@ -238,8 +267,11 @@ def find_words_in_line(line_obb: Obb, word_bboxes: list[Bbox],
     for i, word_bbox in enumerate(word_bboxes):
         word_obb = bbox_to_obb(word_bbox)
         word_obb = obb_to_image_coords(width, height, word_obb)
-        
-        if intersection_area(line_obb, word_obb) / obb_to_polygon(word_obb).area > thresh and i not in used_words:
+
+        if (
+            intersection_area(line_obb, word_obb) / obb_to_polygon(word_obb).area > thresh
+            and i not in used_words
+        ):
             intersected_words_indexes.append(i)
 
     return intersected_words_indexes
@@ -268,22 +300,24 @@ def map_words_to_lines(words: list[Bbox], lines: list[Obb], image: np.ndarray) -
     line_to_words = {}
     used_words = set()
     count = 0
-    
+
     sorted_lines_indices = sort_lines_vertically(lines)
-    
+
     for i in sorted_lines_indices:
         line = lines[i]
-        line_to_words[i] = find_words_in_line(line, words, image.shape[1], image.shape[0], used_words)
+        line_to_words[i] = find_words_in_line(
+            line, words, image.shape[1], image.shape[0], used_words
+        )
         used_words = used_words.union(set(line_to_words[i]))
         count += len(line_to_words[i])
-    
+
     if count == len(words):
         return line_to_words
-    
+
     for i, word in enumerate(words):
         if index_in_map(line_to_words, i):
             continue
-        
+
         line_index = find_line_for_word(to_obb(word), lines)
         if line_index is not None:
             line_to_words[line_index].append(i)
@@ -291,11 +325,13 @@ def map_words_to_lines(words: list[Bbox], lines: list[Obb], image: np.ndarray) -
     return line_to_words
 
 
-def sort_words_by_lines(line_to_words: Dict[int, List[int]], words: List[Bbox]) -> Dict[int, List[int]]:
+def sort_words_by_lines(
+    line_to_words: Dict[int, List[int]], words: List[Bbox]
+) -> Dict[int, List[int]]:
     sorted_line_to_words = {}
-    
+
     for line_index, word_indices in line_to_words.items():
         sorted_indices = sort_words_within_lines(word_indices, words)
         sorted_line_to_words[line_index] = sorted_indices
-    
+
     return sorted_line_to_words

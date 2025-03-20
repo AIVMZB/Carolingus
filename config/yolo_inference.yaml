@@ -1,6 +1,6 @@
 line_detection:
   model_path: ..\models\lines_obb_m_best.pt
-  min_conf: 0.4
+  min_conf: 0.5
   intersection_resolver: ByConfResolver
   rotate_lines: True
 

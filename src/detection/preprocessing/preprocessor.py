@@ -7,8 +7,7 @@ from abc import ABC, abstractmethod
 
 class PreprocessStep(ABC):
     @abstractmethod
-    def __call__(self, image: np.ndarray) -> np.ndarray:
-        ...
+    def __call__(self, image: np.ndarray) -> np.ndarray: ...
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -24,7 +23,7 @@ class TextureRemove(PreprocessStep):
     def _extract_features(image: np.ndarray) -> np.ndarray:
         sobelx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
         sobely = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
-        features = np.sqrt(sobelx ** 2 + sobely ** 2)
+        features = np.sqrt(sobelx**2 + sobely**2)
 
         return features
 
@@ -45,12 +44,12 @@ class EdgeDetection(PreprocessStep):
 
     def __call__(self, image: np.ndarray) -> np.ndarray:
         return cv2.Canny(image, self.t_lower, self.t_upper)
-        
+
 
 class ImagePreprocessor:
     def __init__(self, name: str = "", methods: list = [Identity()]) -> None:
         """
-        Args: 
+        Args:
             methods - list of preprocessing functions of type f(np.ndarray) -> np.ndarray
         """
         self._methods = methods
@@ -66,51 +65,36 @@ class ImagePreprocessor:
         try:
             os.makedirs(save_path, exist_ok=rewrite_if_exists)
         except OSError:
-            raise ValueError(f"Preprocessor with name {self._name} already exists. Change the name or set `rewrite_if_exists = True`")
-         
+            raise ValueError(
+                f"Preprocessor with name {self._name} already exists. Change the name or set `rewrite_if_exists = True`"
+            )
+
         for method in self._methods:
             method_name = method.__class__.__name__ + ".pkl"
             with open(os.path.join(save_path, method_name), "wb") as f:
                 pickle.dump(method, f)
-        
-        with open(os.path.join(save_path, "methods.txt"), 'w') as f:
+
+        with open(os.path.join(save_path, "methods.txt"), "w") as f:
             for method in self._methods:
                 f.write(method.__class__.__name__ + "\n")
-        
 
     @staticmethod
     def load(path: str):
         name = os.path.basename(path)
         method_names = []
-        with open(os.path.join(path, "methods.txt"), 'r') as f:
+        with open(os.path.join(path, "methods.txt"), "r") as f:
             for line in f:
                 method_names.append(line[:-1])
-        
+
         methods = []
         for method_name in method_names:
-            with open(os.path.join(path, method_name + ".pkl"), 'rb') as f:
+            with open(os.path.join(path, method_name + ".pkl"), "rb") as f:
                 methods.append(pickle.load(f))
-        
+
         return ImagePreprocessor(name, methods)
-    
+
     def __repr__(self) -> str:
-        object_data = f"( Image preprocessor \"{self._name}\" | "
+        object_data = f'( Image preprocessor "{self._name}" | '
         object_data += "Methods: "
         object_data += " -> ".join(str(method) for method in self._methods) + " )"
         return object_data
-    
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    img_path = r"E:\Labs\year_3\Latina\LatinaProject\images\AUR_996_V_28-101 (text).jpg"
-    img = cv2.imread(img_path)
-
-    preprocessor = ImagePreprocessor("edge-detection", [EdgeDetection()])
-    img = preprocessor.process(img)
-
-    print(img.min(), img.max())
-    plt.imshow(img)
-    plt.show()
-
-    preprocessor.save("saved_preprocessors")

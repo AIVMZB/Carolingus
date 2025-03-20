@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from detection.model_wrapper import YoloWrapper
+from detection.models import YoloWrapper
 
 
 def parse_args():
@@ -9,11 +9,11 @@ def parse_args():
                         help="path to .yaml file to train a YOLO model")
     parser.add_argument("--model", type=str, default="yolov8m.pt", 
                         help="Name of model to train. Default value is yolov8m.pt")
-    parser.add_argument("-e", "--epochs", type=int, default=300,
+    parser.add_argument("-e", "--epochs", type=int, default=500,
                         help="Number of epochs to train a model")
-    parser.add_argument("--image-size", type=int, default=768,
+    parser.add_argument("--image-size", type=int, default=1024,
                         help="Image size")
-    
+
     return parser.parse_args()
 
 

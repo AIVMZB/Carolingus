@@ -3,6 +3,7 @@ venv
 predictions
 images
 runs
+runs_old
 datasets
 *yolov*.pt
 preprocessed_images
