@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torchvision.models import resnet50
+from torchvision.models import resnet50, ResNet50_Weights
 
 
 class FCResBlock(nn.Module):
@@ -23,7 +23,7 @@ class SyntaxEncoder(nn.Module):
     def __init__(self, output_dim: int):
         super(SyntaxEncoder, self).__init__()
 
-        resnet = resnet50(pretrained=True)
+        resnet = resnet50(weights=ResNet50_Weights.DEFAULT)
         self.cnn = nn.Sequential(*list(resnet.children())[:-1])
 
         self.head = nn.Sequential(

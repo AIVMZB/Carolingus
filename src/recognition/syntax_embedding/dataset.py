@@ -6,9 +6,10 @@ from torchvision.transforms.v2 import (
     GaussianBlur,
     Compose,
     ToDtype,
-    Normalize,
+    # Normalize,
     RandomPerspective,
     ColorJitter,
+    Lambda
 )
 import torch
 import pandas as pd
@@ -65,7 +66,8 @@ class SyntaxEmbeddingTripletDataset(Dataset):
             + [
                 Resize(self._output_size),
                 ToDtype(torch.float32),
-                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                Lambda(lambda x: x / 255.0)
+                # Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
 
@@ -142,7 +144,8 @@ class ImgToWordDataset(Dataset):
         transforms = [
             ToDtype(torch.float32),
             Resize(self._img_size),
-            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            Lambda(lambda x: x / 255.0)
+            # Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
         if augment:
             augmentations = [RandomRotation(degrees=15), RandomPerspective()]
@@ -218,7 +221,8 @@ class HardTripletsDataset(Dataset):
             + [
                 Resize(self._image_size),
                 ToDtype(torch.float32),
-                Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                Lambda(lambda x: x / 255.0)
+                # Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
 

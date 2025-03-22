@@ -77,7 +77,9 @@ def read_img2word_dataset(
     datasets = []
     for subset in subsets:
         if balanced:
-            df = pd.read_csv(os.path.join(dataset_path, f"{subset}-reduced-balanced.csv"))
+            df = pd.read_csv(
+                os.path.join(dataset_path, f"{subset}-reduced-balanced.csv")
+            )
         else:
             df = pd.read_csv(os.path.join(dataset_path, f"{subset}.csv"))
 
@@ -136,7 +138,7 @@ def test(
         for test_data in tqdm(dataset):
             test_word = test_data["word"]
             test_image = test_data["image"]
-            
+
             vec = model(test_image)[0]
             closest_words = indexed_embeddings.find_closest_words(
                 vec, margin=margin, max_words=max_words
@@ -182,15 +184,13 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         balanced=False,
     )
 
-    val_img2word_dataset, test_img2word_dataset = (
-        read_img2word_dataset(
-            config["DATASET_PATH"],
-            config["IMG_SIZE"],
-            config["IMG_FORMAT"],
-            add_batch_dim=True,
-            subsets=["val", "test"],
-            balanced=False,
-        )
+    val_img2word_dataset, test_img2word_dataset = read_img2word_dataset(
+        config["DATASET_PATH"],
+        config["IMG_SIZE"],
+        config["IMG_FORMAT"],
+        add_batch_dim=True,
+        subsets=["val", "test"],
+        balanced=False,
     )
 
     train_embeddings = make_save_embeddings(
@@ -200,7 +200,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         train_results.trained_model, save_dir, val_img2word_dataset, subset="val"
     )
 
-    max_words = 10
+    max_words = 1
 
     print("Validating...")
     indexed_train_embeddings = IndexedEmbeddings(train_embeddings)
@@ -209,7 +209,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         indexed_train_embeddings,
         config["MARGIN_THRESHOLD"],
         threshold=2,
-        max_words=max_words
+        max_words=max_words,
     )
 
     print(f"The metric value is {nearest_precision}")
@@ -227,7 +227,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         max_words=max_words,
         str_dist_thresh=2,
         n_samples=20,
-        verbose=False
+        verbose=False,
     )
     test(
         train_results.trained_model,
@@ -238,7 +238,7 @@ def post_training_routine(config: dict, save_dir: str, train_results: TrainResul
         max_words=max_words,
         str_dist_thresh=2,
         n_samples=20,
-        verbose=False
+        verbose=False,
     )
 
 
@@ -374,6 +374,8 @@ def main_pipeline(config: str | dict):
 
         model = training_pipeline(config, save_dir_of_repeat, model)
         for j in range(config["HARD_TRAIN"]["REPEAT"]):
-            model = hard_training_pipeline(config, model, save_dir_of_repeat, repeat=j + 1)
+            model = hard_training_pipeline(
+                config, model, save_dir_of_repeat, repeat=j + 1
+            )
 
     print(f"Results are saved to {save_dir}")

@@ -23,7 +23,7 @@ class IndexedEmbeddings:
         self._indexed_embeddings.add(vectors)
 
     def find_closest_words(
-        self, vector: np.ndarray | torch.Tensor, max_words: int, margin: float
+        self, vector: np.ndarray | torch.Tensor, max_words: int, margin: float = 2
     ) -> List[str]:
         """
         Finds closest words to a given vector in the indexed embeddings.
