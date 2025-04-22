@@ -1,15 +1,15 @@
 from detection.bounding_boxes.word_to_lines import crop_line_from_image
 from detection.bounding_boxes.obb_helper import extend_lines_to_corners
 from detection.bounding_boxes.plotter import plot_obbs_on_image
-from detection.intersect_resolver import (
+from detection.bounding_boxes.intersect_resolver import (
     IntersectionResolver,
     resolve_intersected_objects,
     build_resolver_by_name,
     tensor_to_boxes,
 )
 from detection.bounding_boxes import Obb, Bbox, obb_to_bbox, obb_to_image_coords
-from .base import WordDetector
 
+from dataclasses import dataclass
 from ultralytics import YOLO
 from typing import List
 import numpy as np
@@ -19,6 +19,14 @@ import cv2
 import os
 
 
+@dataclass
+class PipelineResult:
+    lines: list
+    words: list
+    line_images: list[np.ndarray]
+    word_images: list[np.ndarray]
+
+
 def obb_center(obb: Obb) -> tuple[float, float]:
     return (
         (obb.x1 + obb.x2 + obb.x3 + obb.x4) / 4,
@@ -26,7 +34,7 @@ def obb_center(obb: Obb) -> tuple[float, float]:
     )
 
 
-class LineWordPipeline(WordDetector):
+class LineWordPipeline:
     def __init__(
         self,
         line_detection_model: str,
@@ -107,6 +115,8 @@ class LineWordPipeline(WordDetector):
         for i, cropped_word in enumerate(word_images):
             cv2.imwrite(os.path.join(cropped_words_dir, f"{i}.png"), cropped_word)
 
+        print(f"Results are saved to {save_dir}")
+
     def crop_words(self, line_image: np.ndarray, words: List[Obb]) -> List[np.ndarray]:
         words = map(
             lambda word: obb_to_image_coords(
@@ -127,7 +137,9 @@ class LineWordPipeline(WordDetector):
 
     def predict(
         self, image: str | np.ndarray, save_dir: str | None = None
-    ) -> np.ndarray:
+    ) -> PipelineResult:
+        pipeline_result = PipelineResult([], [], [], [])
+
         line_results = self._line_model.predict([image], conf=self._line_conf)
 
         lines = line_results[0].obb.xyxyxyxyn
@@ -140,10 +152,13 @@ class LineWordPipeline(WordDetector):
         lines = extend_lines_to_corners(lines)
         lines.sort(key=lambda line: obb_center(line)[1])
 
+        pipeline_result.lines = lines
+
         words_predictions = []
         word_images = []
         for line in lines:
             line_image = crop_line_from_image(image, line, rotate=self._rotate_lines)
+            pipeline_result.line_images.append(line_image)
 
             if line_image.size == 0:
                 print("[WARNING] Failed to crop a line. Its size is zero!")
@@ -157,13 +172,18 @@ class LineWordPipeline(WordDetector):
 
             line_words = self._resolve_word_intersections(line_words, word_confs)
             line_words.sort(key=lambda word: obb_center(word)[0])
+
+            pipeline_result.words.append(line_words)
+
             words_predictions.append(line_words)
             word_images += self.crop_words(line_image, line_words)
 
         if save_dir is not None:
             self.save_prediction_results(save_dir, image, lines, words_predictions, word_images)
 
-        return word_images
+        pipeline_result.word_images = word_images
+
+        return pipeline_result
 
 
 def build_line_word_pipeline(config: dict[str, any]):
