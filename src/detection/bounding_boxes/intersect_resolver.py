@@ -80,15 +80,15 @@ def build_resolver_by_name(resolver_name: str | None) -> IntersectionResolver | 
         resolver (IntersectionResolver | None)
     """
     if resolver_name == "ByConfResolver":
-        from detection.intersect_resolver import ByConfidenceResolver
+        from detection.bounding_boxes.intersect_resolver import ByConfidenceResolver
 
         return ByConfidenceResolver()
     if resolver_name == "MeanResolver":
-        from detection.intersect_resolver import MeanResolver
+        from detection.bounding_boxes.intersect_resolver import MeanResolver
 
         return MeanResolver()
     if resolver_name == "UnionResolver":
-        from detection.intersect_resolver import UnionResolver
+        from detection.bounding_boxes.intersect_resolver import UnionResolver
 
         return UnionResolver()
     if resolver_name is None:

@@ -1,41 +1,17 @@
-from detection.preprocessing.preprocessor import ImagePreprocessor
-
 from ultralytics import YOLO
-from typing import Union
+from typing import Union, Any
 import numpy as np
+import yaml
 import cv2
 import torch
 import os
 
 
 class YoloWrapper:
-    TRAIN_KWARGS = dict(
-        batch=4,
-        box=9,
-        cls=1.5,
-        dfl=1.3,
-        optimizer="Adam",
-        rect=True,
-        single_cls=True,
-        workers=1,
-        hsv_h=0.0,
-        hsv_s=0.0,
-        hsv_v=0.0,
-        translate=0.1,
-        scale=0.1,
-        fliplr=0.0,
-        mosaic=0.0,
-        erasing=0.0,
-        crop_fraction=0.1,
-        lr0=0.002,
-        lrf=0.001,
-    )
-
     def __init__(
         self,
         model_path: str,
         device: Union[torch.device, str],
-        preprocessor: Union[ImagePreprocessor, str, None] = None,
     ):
         """
         Creates instance of YoloWrapper
@@ -51,36 +27,13 @@ class YoloWrapper:
 
         self._model = YOLO(model_path).to(self._device)
 
-        if isinstance(preprocessor, ImagePreprocessor):
-            self._preprocessor = preprocessor
-        elif isinstance(preprocessor, str):
-            assert os.path.exists(
-                preprocessor
-            ), "Provide preprocessor object or its valid path"
-            self._preprocessor = ImagePreprocessor.load(preprocessor)
-        else:
-            self._preprocessor = ImagePreprocessor()
-
     def train(
-        self, data_file: str, epochs: int, img_size: int, angle_aug: float = 0
+        self, config: Union[str, dict[str, Any]]
     ) -> None:
-        """
-        Trains model using given data
-        Args:
-            data_file (str): path to yaml file of dataset
-            epochs (int): number of epochs to train
-            img_size (int): image size
-            angle_aug (float): Value for applying rotation augmentation by given angle.
-                Useful to train line detection model with angle_aug=3. Defaults to 0.
-        """
-        self._model.train(
-            data=data_file,
-            epochs=epochs,
-            imgsz=img_size,
-            device=self._device,
-            degrees=angle_aug,
-            **YoloWrapper.TRAIN_KWARGS,
-        )
+        if isinstance(config, str):
+            config = yaml.safe_load(open(config))
+
+        self._model.train(**config)
 
     def inference_image(
         self,
@@ -100,7 +53,6 @@ class YoloWrapper:
             save_boxes_file (str | None): Set path to txt file to save predicted bounding boxes. Defauls to None
         """
         image = cv2.imread(image_path)
-        image = self._preprocessor.process(image)
 
         result = self._model.predict([image], conf=min_conf)[0]
 
