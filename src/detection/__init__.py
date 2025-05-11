@@ -1,0 +1,1 @@
+from detection.models import build_line_word_pipeline, LineWordPipeline

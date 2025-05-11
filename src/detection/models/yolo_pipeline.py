@@ -20,7 +20,7 @@ import os
 
 
 @dataclass
-class PipelineResult:
+class LineWordPipelineResult:
     lines: list
     words: list
     line_images: list[np.ndarray]
@@ -137,8 +137,8 @@ class LineWordPipeline:
 
     def predict(
         self, image: str | np.ndarray, save_dir: str | None = None
-    ) -> PipelineResult:
-        pipeline_result = PipelineResult([], [], [], [])
+    ) -> LineWordPipelineResult:
+        pipeline_result = LineWordPipelineResult([], [], [], [])
 
         line_results = self._line_model.predict([image], conf=self._line_conf)
 
