@@ -98,5 +98,6 @@ def main():
     torch.save(model.state_dict(), "model_3.pth")
     save_training_graphs(train_losses, val_losses, train_accuracies, val_accuracies)
 
+
 if __name__ == '__main__':
     main()
