@@ -44,7 +44,7 @@ class LineWordPipeline:
         line_int_resolver: IntersectionResolver | None,
         word_int_resolver: IntersectionResolver | None,
         rotate_lines: bool = False,
-        device: str = "cuda:0",
+        device: str = "cpu",
     ):
         self._device = torch.device(device)
         self._line_model = YOLO(line_detection_model).to(self._device)
@@ -209,4 +209,5 @@ def build_line_word_pipeline(config: dict[str, any]):
         line_int_resolver,
         word_int_resolver,
         config["line_detection"]["rotate_lines"],
+        config["device"],
     )

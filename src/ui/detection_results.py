@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import streamlit as st
 from pipeline import FullResult
+from PIL import Image
 from detection.bounding_boxes.plotter import plot_obbs_on_image
 
 
@@ -13,7 +14,7 @@ def show_detection_results(image: np.ndarray, results: FullResult):
     image_with_lines = plot_obbs_on_image(image.copy(), detection_results.lines)
 
     st.write("Виявлені рядки:")
-    st.image(image_with_lines)
+    st.image(Image.fromarray(image_with_lines))
 
     st.divider()
 
@@ -22,4 +23,4 @@ def show_detection_results(image: np.ndarray, results: FullResult):
     for i, line_image in enumerate(detection_results.line_images):
         line_image = cv2.cvtColor(line_image, cv2.COLOR_BGR2RGB)
         line_image = plot_obbs_on_image(line_image.copy(), detection_results.words[i])
-        st.image(line_image)
+        st.image(Image.fromarray(line_image))

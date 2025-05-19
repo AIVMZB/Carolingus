@@ -41,3 +41,9 @@ The project is created for reading medieval latin documents using deep learning 
 and unpack it to project root folder
 
 [Link](https://drive.google.com/drive/folders/1rDiNWzTFDnUGerJdcM-tIONm1AEr_n0h?usp=sharing) for raw data.
+
+### Run app
+
+```bash
+streamlit run src/main.py
+```

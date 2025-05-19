@@ -1,4 +1,5 @@
 import cv2
+from PIL import Image
 import streamlit as st
 from pipeline import FullResult
 
@@ -29,4 +30,4 @@ def show_recognition_results(full_result: FullResult):
 """,
                 unsafe_allow_html=True,
             )
-            st.image(image, width=int(image.shape[1] * ratio))
+            st.image(Image.fromarray(image), width=int(image.shape[1] * ratio))

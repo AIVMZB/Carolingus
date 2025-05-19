@@ -7,7 +7,7 @@ from .model import FullModel
 
 
 class WordClassifier:
-    def __init__(self, weights: str, labels: str | dict, device: str = "cuda"):
+    def __init__(self, weights: str, labels: str | dict, device: str = "cpu"):
         if isinstance(labels, str):
             labels = json.load(open(labels))
         else:
@@ -18,7 +18,7 @@ class WordClassifier:
         self._device = device
 
         self._model = FullModel(len(labels)).to(self._device)
-        self._model.load_state_dict(torch.load(weights, weights_only=True))
+        self._model.load_state_dict(torch.load(weights, weights_only=True, map_location=self._device))
 
         self.transform = transforms.Compose(
             [

@@ -3,3 +3,4 @@ syntax_encoder_weights: models/embedder.pt
 embeddings: models/train-embeddings.json
 classifier_weights: models/word_classifier.pt
 labels: models/train-labels.json
+device: cpu

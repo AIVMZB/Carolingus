@@ -14,7 +14,8 @@ class PipelineConfig(BaseModel):
     embeddings: str
     classifier_weights: str
     labels: str
-
+    device: str = "cpu"
+ 
     @staticmethod
     def load(config: str) -> "PipelineConfig":
         return PipelineConfig.model_validate(yaml.safe_load(open(config)))
@@ -34,9 +35,12 @@ class Pipeline:
         self._syntax_encoder = SyntaxEncoderInference(
             weights=self._config.syntax_encoder_weights,
             embeddings=self._config.embeddings,
+            device=self._config.device,
         )
         self._word_classifier = WordClassifier(
-            self._config.classifier_weights, self._config.labels
+            self._config.classifier_weights,
+            self._config.labels,
+            device=self._config.device
         )
         self._softmax_threshold = 0.9
 

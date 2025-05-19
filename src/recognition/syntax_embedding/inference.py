@@ -12,7 +12,7 @@ class SyntaxEncoderInference:
         self,
         weights: str,
         embeddings: Union[str, dict[str, np.ndarray]],
-        device: str = "cuda",
+        device: str = "cpu",
     ):
         if isinstance(embeddings, str):
             embeddings = json.load(open(embeddings))
@@ -27,7 +27,7 @@ class SyntaxEncoderInference:
         self._device = device
 
         self._model = SyntaxEncoder(output_dim=self._output_dim).to(self._device)
-        self._model.load_state_dict(torch.load(weights, weights_only=True))
+        self._model.load_state_dict(torch.load(weights, weights_only=True, map_location=self._device))
         self._model.eval()
 
         self._transforms = Compose(

@@ -51,8 +51,3 @@ class FullModel(nn.Module):
         features = features.view(features.size(0), -1)  # Flatten to (batch_size, 2048)
         output = self.classifier(features)  # Pass through classifier
         return output
-
-
-if __name__ == "__main__":
-    model = FullModel(1765)
-    torch.save(model.state_dict(), "word_classifier.pt")

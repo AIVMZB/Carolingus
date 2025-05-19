@@ -13,7 +13,6 @@ def split_dataset(dataset, train_ratio=0.8):
 def get_dataloader(train_dir, val_dir, batch_size=32):
     transform = transforms.Compose(
         [   transforms.Resize((200, 200)),
-            #transforms.RandomCrop(size=120),
             transforms.ElasticTransform(alpha=50.0, sigma=2.5),
             transforms.RandomRotation(15),
             transforms.ColorJitter(brightness=0.1, contrast=0.2, saturation=0.2, hue=0.05),
