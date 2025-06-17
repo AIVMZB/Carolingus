@@ -44,6 +44,11 @@ and unpack it to project root folder
 
 ### Run app
 
-```bash
-streamlit run src/main.py
-```
+1. Activate virtual enviroment
+    ```bash
+    venv\Scripts\activate
+    ```
+2. Run `main.py` via `streamlit`
+    ```bash
+    streamlit run src/main.py
+    ```
