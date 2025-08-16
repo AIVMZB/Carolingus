@@ -56,3 +56,5 @@ streamlit run src/main.py
 ```
 
 Navigate to the page at `localhost:8501`.
+
+Images for tests are located in `assets` directory.
