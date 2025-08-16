@@ -12,7 +12,7 @@ from detection.bounding_boxes.obb_helper import (
 
 
 def find_intersecting_objects(
-    boxes: List[sh.Obb], threshold: float = 0.4
+    boxes: List[sh.Obb | None], threshold: float = 0.4
 ) -> List[tuple[int, int]]:
     """
     Finds interseceted boxes by IoU
@@ -25,7 +25,11 @@ def find_intersecting_objects(
     intersecting_objects = []
 
     for i in range(len(boxes)):
+        if boxes[i] is None:
+            continue
         for j in range(i + 1, len(boxes)):
+            if boxes[j] is None:
+                continue
             if sh.IoU(boxes[i], boxes[j]) >= threshold:
                 intersecting_objects.append((i, j))
 
@@ -134,13 +138,16 @@ def resolve_intersected_objects(
     confs = confs.to("cpu")
     intersected_boxes = find_intersecting_objects(boxes, threshold)
 
-    for pair in intersected_boxes:
-        i = pair[0]
-        j = pair[1]
+    while len(intersected_boxes) != 0:
+        for pair in intersected_boxes:
+            i = pair[0]
+            j = pair[1]
 
-        if boxes[i] is not None and boxes[j] is not None:  ## TODO: Fix it
-            chosen_box = resolver(boxes[i], confs[i], boxes[j], confs[j])
-            boxes[i] = chosen_box
-            boxes[j] = None
+            if boxes[i] is not None and boxes[j] is not None:  ## TODO: Fix it
+                chosen_box = resolver(boxes[i], confs[i], boxes[j], confs[j])
+                boxes[i] = chosen_box
+                boxes[j] = None
+
+        intersected_boxes = find_intersecting_objects(boxes, threshold)
 
     return list(filter(lambda x: x != None, boxes))
