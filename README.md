@@ -1,54 +1,58 @@
 # Medieval documents reader
 
-The project is created for reading medieval latin documents using deep learning techniques. 
+The project was built to transcribe medieval Latin handwritten documents. The application detects text lines, words and clasifies each detected word.
 
 ### Set up
 
-1) Clone the repository 
+1. Clone the repo
     ```bash
-    git clone https://github.com/AIVMZB/Latina.git
+    git clone https://github.com/AIVMZB/Carolingus.git
+    cd Carolingus
     ```
-2) Move into project directory 
-    ```bash
-    cd Latina
-    ```
-3) Install CUDA on your device ([11.8.0](https://developer.nvidia.com/cuda-11-8-0-download-archive) is recomended). 
-4) Create virtual enviroment:
-    - Windows 
+
+2. Create Python virtual enviroment (`python=3.10.0` version is recommended)
+    - Windows
         ```bash
         py -m venv venv
         venv\Scripts\activate
         ```
-    - Linux 
+    
+    - Linux
         ```bash
-        python3 -m venv venv
+        python -m venv venv
         source venv/bin/activate
         ```
-5) Install pytorch for your CUDA version. You can find the command [here](https://pytorch.org/get-started/locally/) or for 11.8.0 version of CUDA run 
-    ```bash
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-    ```
 
-6) Install ultralytics 
+3. Install pytorch for your CUDA version
+    - Linux
+        ```bash
+        pip install torch
+        ```
+    
+    - Windows
+
+        Navigate to [pytorch page](https://pytorch.org/get-started/locally/) to find command for your CUDA version. For example:
+        ```bash
+        pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+        ```
+
+4. Install `ultralytics`
     ```bash
     pip install ultralytics
     ```
-7) Install other libraries 
+
+5. Install other libraries
     ```bash
     pip install -r requirements.txt
     ```
-8) Download the [datasets](https://drive.google.com/file/d/1Uw4uyqgTVrOy2VdOgZIdBIwMiTCDGNMj/view?usp=drive_link) 
-and unpack it to project root folder
 
-[Link](https://drive.google.com/drive/folders/1rDiNWzTFDnUGerJdcM-tIONm1AEr_n0h?usp=sharing) for raw data.
+6. Download the [weights](https://drive.google.com/drive/folders/1nVQtXSZoo25pWf3lLEyjFa20DNbecqYa?usp=drive_link) and place the files into `models` directory.
 
-### Run app
+### Run the app
+The web UI runs as a [streamlit](https://streamlit.io/) application. 
 
-1. Activate virtual enviroment
-    ```bash
-    venv\Scripts\activate
-    ```
-2. Run `main.py` via `streamlit`
-    ```bash
-    streamlit run src/main.py
-    ```
+```bash
+streamlit run src/main.py
+```
+
+Navigate to the page at `localhost:8501`.
