@@ -1,4 +1,4 @@
-# Medieval documents reader
+# Carolingus Project
 
 The project was built to transcribe medieval Latin handwritten documents. The application detects text lines, words and clasifies each detected word.
 
