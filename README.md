@@ -1,5 +1,7 @@
 # Carolingus Project
 
+<img width="1125" height="576" alt="зображення" src="https://github.com/user-attachments/assets/77881946-9758-4c03-b269-742e3f845060" />
+
 The project was built to transcribe medieval Latin handwritten documents. The application detects text lines, words and clasifies each detected word.
 
 ### Set up
