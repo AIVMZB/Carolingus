@@ -1,6 +1,19 @@
-# Carolingus Project
+<div align="center">
+
+# The Carolingus Project
+
+[![Conference](https://img.shields.io/badge/AISTDS-2025-blue)](https://ceur-ws.org/Vol-4133/S_05_Kozlenko.pdf)
+
+</div>
 
 <img width="1125" height="576" alt="зображення" src="https://github.com/user-attachments/assets/77881946-9758-4c03-b269-742e3f845060" />
+
+This is an official repository for the paper
+```
+Application of deep learning approaches for medieval historical documents transcription
+Maksym Voloshchuk, Bohdana Zarembovska, Mykola Kozlenko
+AISTDS 2025
+```
 
 The project was built to transcribe medieval Latin handwritten documents. The application detects text lines, words and clasifies each detected word.
 
@@ -60,3 +73,8 @@ streamlit run src/main.py
 Navigate to the page at `localhost:8501`.
 
 Images for tests are located in `assets` directory.
+
+### Citation
+```
+M. Voloshchuk, B. Zarembovska, and M. Kozlenko, "Application of deep learning approaches for medieval historical documents transcription," in Proceedings of the 9th International Scientific and Practical Conference Applied Information Systems and Technologies in the Digital Society (AISTDS 2025), in CEUR Workshop Proceedings, vol. 4133, Kyiv, Ukraine, Oct.1, 2025, pp. 45-60. [Online]. Available: https://ceur-ws.org/Vol-4133/S_05_Kozlenko.pdf
+```
